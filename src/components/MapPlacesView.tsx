@@ -308,7 +308,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-5 pb-28">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-5 pb-40 sm:pb-32">
       {/* Top Filter & Search Controls */}
       <div className="bg-[#FFFDF9] border border-[#EDE2D5] rounded-2xl p-3 sm:p-4 shadow-xs mb-4">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -544,6 +544,9 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
           )}
         </div>
       )}
+
+      {/* Mobile-safe bottom spacer */}
+      <div className="h-12" aria-hidden="true" />
     </div>
   );
 };

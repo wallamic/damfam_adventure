@@ -51,7 +51,7 @@ export const EssentialsView: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 pb-28 space-y-6">
+    <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 pb-44 sm:pb-36 space-y-6">
       {/* Header Banner */}
       <div className="bg-gradient-to-br from-[#FAF2E8] via-[#F5ECE0] to-[#EFE2D2] border border-[#DECEBE] rounded-2xl p-4 sm:p-5 shadow-xs text-[#3D2619]">
         <div className="flex items-center gap-2 mb-1.5">
@@ -199,6 +199,9 @@ export const EssentialsView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Mobile-safe bottom spacer */}
+      <div className="h-12" aria-hidden="true" />
     </div>
   );
 };
