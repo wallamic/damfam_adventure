@@ -1,0 +1,6 @@
+{
+  "name": "Amsterdam Family Travel Companion",
+  "description": "Mobile-first family travel planner for two families in Amsterdam with kids and strollers, featuring neighborhood itineraries, interactive maps, accessible transit, and curated spots.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
