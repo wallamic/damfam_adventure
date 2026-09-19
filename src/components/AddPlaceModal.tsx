@@ -64,6 +64,18 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
   const [diaperChangeNearby, setDiaperChangeNearby] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
 
+  // Keyboard accessibility: Escape key closes the bottom sheet
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleGetCurrentLocation = () => {
@@ -121,16 +133,28 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2D1B10]/40 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-in fade-in">
-      <div className="w-full max-w-lg bg-white border border-[#EDE2D5] rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col animate-in zoom-in-95">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#2D1B10]/50 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto animate-in fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-spot-title"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:max-w-lg bg-white border border-[#EDE2D5] rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-8 sm:zoom-in-95"
+      >
+        {/* Mobile Drag Handle Indicator (Ergonomic cue) */}
+        <div className="w-12 h-1.5 rounded-full bg-[#D5BFA8] mx-auto mt-2.5 mb-0.5 sm:hidden" aria-hidden="true" />
+
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[#EDE2D5] flex items-center justify-between bg-[#FAF4ED]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#F5ECE0] text-[#C85A32] flex items-center justify-center border border-[#DECEBE]">
+            <div className="w-9 h-9 rounded-xl bg-[#F5ECE0] text-[#C85A32] flex items-center justify-center border border-[#DECEBE]">
               <Plus className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-[#2E1A0F] font-serif">
+              <h3 id="add-spot-title" className="text-base sm:text-lg font-bold text-[#2E1A0F] font-serif">
                 Add New Family Spot
               </h3>
               <p className="text-xs text-[#7A6150]">
@@ -138,41 +162,47 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
               </p>
             </div>
           </div>
+          {/* Visible 44px close button for accessibility */}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-[#7A6150] hover:text-[#2E1A0F] hover:bg-[#F5ECE0] transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl text-[#7A6150] hover:text-[#2E1A0F] hover:bg-[#F5ECE0] transition-colors active:scale-95"
+            aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs sm:text-sm">
+        {/* Form with overscroll-contain & 16px base font to prevent iOS zoom */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 overflow-y-auto overscroll-contain space-y-4 text-sm">
           {/* Place Name */}
           <div>
-            <label className="block text-xs font-bold text-[#3D2619] mb-1">
+            <label htmlFor="spot-name" className="block text-xs font-bold text-[#3D2619] mb-1">
               Place / Spot Name *
             </label>
             <input
+              id="spot-name"
               type="text"
               required
+              enterKeyHint="next"
+              autoComplete="off"
               placeholder="e.g., De Bakkerswinkel, Sarphatipark Sandpit..."
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484]"
+              className="w-full px-3.5 py-2.5 text-[16px] sm:text-sm bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484] min-h-[44px]"
             />
           </div>
 
           {/* Category & Neighborhood Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#3D2619] mb-1">
+              <label htmlFor="spot-category" className="block text-xs font-bold text-[#3D2619] mb-1">
                 Category
               </label>
               <select
+                id="spot-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as Category)}
-                className="w-full px-3 py-2 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] text-xs"
+                className="w-full px-3 py-2.5 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] text-[16px] sm:text-xs min-h-[44px]"
               >
                 {CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat.value} value={cat.value}>
@@ -183,13 +213,14 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#3D2619] mb-1">
+              <label htmlFor="spot-neighborhood" className="block text-xs font-bold text-[#3D2619] mb-1">
                 Neighborhood
               </label>
               <select
+                id="spot-neighborhood"
                 value={neighborhood}
                 onChange={(e) => setNeighborhood(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] text-xs"
+                className="w-full px-3 py-2.5 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] text-[16px] sm:text-xs min-h-[44px]"
               >
                 {NEIGHBORHOOD_OPTIONS.map((n) => (
                   <option key={n} value={n}>
@@ -203,25 +234,28 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
           {/* Address & GPS */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-[#3D2619]">
+              <label htmlFor="spot-address" className="text-xs font-bold text-[#3D2619]">
                 Address or Street
               </label>
               <button
                 type="button"
                 onClick={handleGetCurrentLocation}
                 disabled={isLocating}
-                className="text-[11px] text-[#C85A32] font-semibold flex items-center gap-1 hover:underline disabled:opacity-50"
+                className="min-h-[32px] px-2 py-1 text-xs text-[#C85A32] font-semibold flex items-center gap-1 hover:underline disabled:opacity-50 active:scale-95"
               >
-                <Compass className="w-3 h-3" />
+                <Compass className="w-3.5 h-3.5" />
                 <span>{isLocating ? 'Locating...' : 'Use Current GPS'}</span>
               </button>
             </div>
             <input
+              id="spot-address"
               type="text"
+              enterKeyHint="next"
+              autoComplete="off"
               placeholder="e.g. Van Woustraat 45, 1074 AA Amsterdam"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484]"
+              className="w-full px-3.5 py-2.5 text-[16px] sm:text-sm bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484] min-h-[44px]"
             />
           </div>
 
@@ -234,7 +268,7 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
               <button
                 type="button"
                 onClick={() => setStrollerAccess('easy')}
-                className={`py-2 px-2 rounded-xl text-xs font-medium border flex flex-col items-center gap-1 transition-all ${
+                className={`min-h-[48px] py-2 px-2 rounded-xl text-xs font-medium border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
                   strollerAccess === 'easy'
                     ? 'bg-[#EBF3E8] text-[#2F5229] border-[#A9CCA0] font-bold'
                     : 'bg-[#FAF4ED] text-[#6B5341] border-[#EDE2D5]'
@@ -247,7 +281,7 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
               <button
                 type="button"
                 onClick={() => setStrollerAccess('moderate')}
-                className={`py-2 px-2 rounded-xl text-xs font-medium border flex flex-col items-center gap-1 transition-all ${
+                className={`min-h-[48px] py-2 px-2 rounded-xl text-xs font-medium border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
                   strollerAccess === 'moderate'
                     ? 'bg-[#FEF3C7] text-[#92400E] border-[#FDE68A] font-bold'
                     : 'bg-[#FAF4ED] text-[#6B5341] border-[#EDE2D5]'
@@ -260,7 +294,7 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
               <button
                 type="button"
                 onClick={() => setStrollerAccess('tricky')}
-                className={`py-2 px-2 rounded-xl text-xs font-medium border flex flex-col items-center gap-1 transition-all ${
+                className={`min-h-[48px] py-2 px-2 rounded-xl text-xs font-medium border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
                   strollerAccess === 'tricky'
                     ? 'bg-[#FEE2E2] text-[#991B1B] border-[#FECACA] font-bold'
                     : 'bg-[#FAF4ED] text-[#6B5341] border-[#EDE2D5]'
@@ -274,67 +308,71 @@ export const AddPlaceModal: React.FC<AddPlaceModalProps> = ({
 
           {/* Notes & Description */}
           <div>
-            <label className="block text-xs font-bold text-[#3D2619] mb-1">
+            <label htmlFor="spot-notes" className="block text-xs font-bold text-[#3D2619] mb-1">
               Notes & Highlights
             </label>
             <textarea
+              id="spot-notes"
               rows={2}
+              enterKeyHint="next"
               placeholder="Why visit? Great pastries, shaded tables, enclosed play area..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484]"
+              className="w-full px-3.5 py-2.5 text-[16px] sm:text-sm bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484]"
             />
           </div>
 
           {/* Toddler / Baby Tip */}
           <div>
-            <label className="block text-xs font-bold text-[#3D2619] mb-1">
+            <label htmlFor="spot-toddler-tip" className="block text-xs font-bold text-[#3D2619] mb-1">
               Toddler & Infant Tip
             </label>
             <input
+              id="spot-toddler-tip"
               type="text"
+              enterKeyHint="done"
               placeholder="e.g., High chairs available, quiet nursing corner, sandpit..."
               value={toddlerTip}
               onChange={(e) => setToddlerTip(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484]"
+              className="w-full px-3.5 py-2.5 text-[16px] sm:text-sm bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484] min-h-[44px]"
             />
           </div>
 
-          {/* Checkboxes */}
+          {/* Checkboxes with full 44px touch targets */}
           <div className="flex flex-wrap items-center gap-4 pt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-[#4A3222] font-medium">
+            <label className="min-h-[44px] flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm text-[#4A3222] font-medium select-none">
               <input
                 type="checkbox"
                 checked={toddlerFriendly}
                 onChange={(e) => setToddlerFriendly(e.target.checked)}
-                className="w-4 h-4 rounded text-[#C85A32] focus:ring-[#C85A32] accent-[#C85A32]"
+                className="w-5 h-5 rounded text-[#C85A32] focus:ring-[#C85A32] accent-[#C85A32]"
               />
               <span>Toddler-Friendly</span>
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-[#4A3222] font-medium">
+            <label className="min-h-[44px] flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm text-[#4A3222] font-medium select-none">
               <input
                 type="checkbox"
                 checked={diaperChangeNearby}
                 onChange={(e) => setDiaperChangeNearby(e.target.checked)}
-                className="w-4 h-4 rounded text-[#C85A32] focus:ring-[#C85A32] accent-[#C85A32]"
+                className="w-5 h-5 rounded text-[#C85A32] focus:ring-[#C85A32] accent-[#C85A32]"
               />
               <span>Diaper Changing Nearby</span>
             </label>
           </div>
 
           {/* Submit Buttons */}
-          <div className="pt-3 border-t border-[#EDE2D5] flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-[#EDE2D5] flex items-center justify-end gap-2 pb-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-[#6B5341] hover:bg-[#FAF4ED] border border-[#EDE2D5] text-xs font-semibold transition-colors"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl text-[#6B5341] hover:bg-[#FAF4ED] border border-[#EDE2D5] text-xs sm:text-sm font-semibold transition-colors active:scale-95"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs transition-colors shadow-xs"
+              className="min-h-[44px] flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs sm:text-sm transition-colors shadow-xs active:scale-95"
             >
               <Check className="w-4 h-4 stroke-[2.5]" />
               <span>Save to Itinerary</span>

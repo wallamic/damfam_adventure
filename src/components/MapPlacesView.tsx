@@ -13,7 +13,9 @@ import {
   Crosshair,
   Maximize2,
   Heart,
-  Plus
+  Plus,
+  Columns2,
+  X
 } from 'lucide-react';
 import { Place } from '../types';
 import { PlaceCard } from './PlaceCard';
@@ -37,6 +39,8 @@ type FilterOption =
   | 'pharmacies'
   | 'favorites';
 
+type ViewMode = 'map' | 'list' | 'split';
+
 export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
   places,
   favorites,
@@ -45,7 +49,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
   onOpenAddModal,
   focusCoordinate,
 }) => {
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [viewMode, setViewMode] = useState<ViewMode>('map');
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string>('all');
@@ -186,7 +190,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
 
   // Initialize Map
   useEffect(() => {
-    if (viewMode !== 'map' || !mapContainerRef.current) return;
+    if ((viewMode !== 'map' && viewMode !== 'split') || !mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
@@ -210,13 +214,13 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
       mapInstanceRef.current = map;
     }
 
-    // Force size recompute
-    setTimeout(() => {
+    // Force size recompute whenever view mode changes or container resizes
+    const timer = setTimeout(() => {
       mapInstanceRef.current?.invalidateSize();
-    }, 150);
+    }, 200);
 
     return () => {
-      // Keep instance intact across view changes or clean up on teardown
+      clearTimeout(timer);
     };
   }, [viewMode]);
 
@@ -315,20 +319,31 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
           {/* Search bar & Neighborhood dropdown */}
           <div className="flex flex-1 items-center gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-[#A89484] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#A89484] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
-                type="text"
+                type="search"
+                inputMode="search"
+                enterKeyHint="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search playgrounds, apple pie, bakeries, canals..."
-                className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484]"
+                className="w-full pl-9 pr-9 py-2.5 text-[16px] sm:text-sm bg-white border border-[#DCCEC0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 text-[#3D2619] placeholder-[#A89484] min-h-[44px]"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="w-8 h-8 absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-[#826955] hover:text-[#2E1A0F] rounded-lg active:scale-90 transition-transform"
+                  aria-label="Clear search query"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             <select
               value={selectedNeighborhood}
               onChange={(e) => setSelectedNeighborhood(e.target.value)}
-              className="py-2 px-2.5 text-xs bg-white border border-[#DCCEC0] rounded-xl text-[#5C4535] focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30"
+              className="py-2.5 px-3 text-[16px] sm:text-xs bg-white border border-[#DCCEC0] rounded-xl text-[#5C4535] focus:outline-none focus:ring-2 focus:ring-[#C85A32]/30 min-h-[44px]"
             >
               <option value="all">All Neighborhoods ({places.length})</option>
               {neighborhoods.map((n) => (
@@ -339,12 +354,12 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
             </select>
           </div>
 
-          {/* View Toggle (Map vs List) & Add Place Button */}
+          {/* View Toggle (Map vs List vs Split) & Add Place Button */}
           <div className="flex items-center justify-between sm:justify-end gap-2">
             <div className="inline-flex rounded-xl bg-[#FAF4ED] p-1 border border-[#EDE2D5]">
               <button
                 onClick={() => setViewMode('map')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
                   viewMode === 'map'
                     ? 'bg-[#C85A32] text-white shadow-xs'
                     : 'text-[#7A6150] hover:text-[#2E1A0F]'
@@ -355,7 +370,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
                   viewMode === 'list'
                     ? 'bg-[#C85A32] text-white shadow-xs'
                     : 'text-[#7A6150] hover:text-[#2E1A0F]'
@@ -364,11 +379,23 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
                 <Grid className="w-3.5 h-3.5" />
                 <span>List ({filteredPlaces.length})</span>
               </button>
+              <button
+                onClick={() => setViewMode('split')}
+                className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
+                  viewMode === 'split'
+                    ? 'bg-[#C85A32] text-white shadow-xs'
+                    : 'text-[#7A6150] hover:text-[#2E1A0F]'
+                }`}
+                title="View Map and List side-by-side"
+              >
+                <Columns2 className="w-3.5 h-3.5" />
+                <span>Split View</span>
+              </button>
             </div>
 
             <button
               onClick={onOpenAddModal}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs transition-colors shadow-xs"
+              className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs transition-colors shadow-xs active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden xs:inline">Add Spot</span>
@@ -380,7 +407,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
         <div className="mt-3 pt-3 border-t border-[#EDE2D5] flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
           <button
             onClick={() => setSelectedFilter('all')}
-            className={`px-3 py-1 rounded-full font-medium transition-colors flex-shrink-0 ${
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-full font-medium transition-colors flex-shrink-0 active:scale-95 ${
               selectedFilter === 'all'
                 ? 'bg-[#2E1A0F] text-white font-bold'
                 : 'bg-[#FAF4ED] text-[#6B5341] hover:bg-[#F2E7DC] border border-[#EDE2D5]'
@@ -391,7 +418,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
 
           <button
             onClick={() => setSelectedFilter('playgrounds')}
-            className={`px-3 py-1 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 ${
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 active:scale-95 ${
               selectedFilter === 'playgrounds'
                 ? 'bg-[#2F5229] text-white font-bold'
                 : 'bg-[#EBF3E8] text-[#2F5229] border border-[#C5DCBF]'
@@ -403,7 +430,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
 
           <button
             onClick={() => setSelectedFilter('cafes')}
-            className={`px-3 py-1 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 ${
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 active:scale-95 ${
               selectedFilter === 'cafes'
                 ? 'bg-[#B45309] text-white font-bold'
                 : 'bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]'
@@ -415,7 +442,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
 
           <button
             onClick={() => setSelectedFilter('food')}
-            className={`px-3 py-1 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 ${
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 active:scale-95 ${
               selectedFilter === 'food'
                 ? 'bg-[#9A3412] text-white font-bold'
                 : 'bg-[#FFEDD5] text-[#9A3412] border border-[#FED7AA]'
@@ -427,7 +454,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
 
           <button
             onClick={() => setSelectedFilter('culture')}
-            className={`px-3 py-1 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 ${
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 active:scale-95 ${
               selectedFilter === 'culture'
                 ? 'bg-[#78350F] text-white font-bold'
                 : 'bg-[#F5ECE0] text-[#78350F] border border-[#DECEBE]'
@@ -439,7 +466,7 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
 
           <button
             onClick={() => setSelectedFilter('pharmacies')}
-            className={`px-3 py-1 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 ${
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 active:scale-95 ${
               selectedFilter === 'pharmacies'
                 ? 'bg-[#991B1B] text-white font-bold'
                 : 'bg-[#FEE2E2] text-[#991B1B] border border-[#FECACA]'
@@ -452,13 +479,13 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
           {favorites.length > 0 && (
             <button
               onClick={() => setSelectedFilter('favorites')}
-              className={`px-3 py-1 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1 ${
+              className={`min-h-[38px] px-3.5 py-1.5 rounded-full font-medium transition-colors flex-shrink-0 flex items-center gap-1.5 active:scale-95 ${
                 selectedFilter === 'favorites'
                   ? 'bg-[#C85A32] text-white font-bold'
                   : 'bg-[#FAF0E4] text-[#C85A32] border border-[#ECD9C5]'
               }`}
             >
-              <Heart className="w-3 h-3 fill-current" />
+              <Heart className="w-3.5 h-3.5 fill-current" />
               <span>Saved Favorites ({favorites.length})</span>
             </button>
           )}
@@ -542,6 +569,88 @@ export const MapPlacesView: React.FC<MapPlacesViewProps> = ({
               />
             ))
           )}
+        </div>
+      )}
+
+      {/* Split Mode View (Desktop Comparative Multi-Column Scanning) */}
+      {viewMode === 'split' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* Left: Sticky interactive Leaflet Map */}
+          <div className="lg:col-span-6 relative rounded-2xl overflow-hidden border border-[#EDE2D5] shadow-md h-[55vh] lg:h-[calc(100vh-250px)] lg:sticky lg:top-24 bg-[#FAF4ED]">
+            <div ref={mapContainerRef} className="w-full h-full z-10" />
+
+            {/* Map Overlay Quick Actions */}
+            <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+              <button
+                onClick={centerOnBasecamp}
+                className="p-2.5 rounded-xl bg-white text-[#5C4535] shadow-md hover:bg-[#FAF4ED] border border-[#EDE2D5] transition-colors active:scale-95"
+                title="Center on Host Basecamp (Eendrachtstraat 13H)"
+              >
+                <Home className="w-4 h-4 text-[#C85A32]" />
+              </button>
+              <button
+                onClick={fitAllMarkers}
+                className="p-2.5 rounded-xl bg-white text-[#5C4535] shadow-md hover:bg-[#FAF4ED] border border-[#EDE2D5] transition-colors active:scale-95"
+                title="Fit all places in view"
+              >
+                <Maximize2 className="w-4 h-4 text-[#6B5341]" />
+              </button>
+            </div>
+
+            {/* Map Legend Floating Pill */}
+            <div className="absolute bottom-3 left-3 right-3 z-20 pointer-events-none">
+              <div className="max-w-max mx-auto bg-[#FFFDF9]/95 backdrop-blur-md text-[#3D2619] px-3.5 py-1.5 rounded-full border border-[#EDE2D5] text-[10px] sm:text-xs flex items-center gap-3 shadow-md pointer-events-auto overflow-x-auto font-medium">
+                <span className="flex items-center gap-1">
+                  <span>🏠</span> <strong className="text-[#C85A32]">Basecamp</strong>
+                </span>
+                <span className="flex items-center gap-1">
+                  <span>🛝</span> Playgrounds
+                </span>
+                <span className="flex items-center gap-1">
+                  <span>☕</span> Cafes
+                </span>
+                <span className="flex items-center gap-1">
+                  <span>🍽️</span> Food
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Scrollable Place Cards with overscroll-contain */}
+          <div className="lg:col-span-6 lg:max-h-[calc(100vh-250px)] lg:overflow-y-auto lg:overscroll-contain pr-1 space-y-3">
+            <div className="flex items-center justify-between px-1 text-xs text-[#7A6150] mb-1">
+              <span className="font-bold text-[#2E1A0F]">
+                Matching Places ({filteredPlaces.length})
+              </span>
+              <span>Tap a card for detailed family guide</span>
+            </div>
+
+            {filteredPlaces.length === 0 ? (
+              <div className="py-12 text-center text-[#7A6150]">
+                <p className="text-sm">No places matched your search or filters.</p>
+                <button
+                  onClick={() => {
+                    setSelectedFilter('all');
+                    setSearchQuery('');
+                    setSelectedNeighborhood('all');
+                  }}
+                  className="mt-2 text-xs font-semibold text-[#C85A32] hover:underline"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              filteredPlaces.map((place) => (
+                <PlaceCard
+                  key={place.id}
+                  place={place}
+                  isFavorite={favorites.includes(place.id)}
+                  onToggleFavorite={onToggleFavorite}
+                  onSelectPlace={onSelectPlace}
+                />
+              ))
+            )}
+          </div>
         </div>
       )}
 

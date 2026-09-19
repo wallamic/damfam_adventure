@@ -110,11 +110,12 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
               e.stopPropagation();
               onToggleFavorite(place.id);
             }}
-            className="p-1 rounded-full text-[#BCAAA0] hover:text-[#C85A32] transition-colors"
+            className="w-11 h-11 -mr-2 -mt-2 flex items-center justify-center rounded-xl text-[#BCAAA0] hover:text-[#C85A32] hover:bg-[#FAF4ED] transition-colors active:scale-90"
             title="Favorite place"
+            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             <Heart
-              className={`w-4 h-4 ${
+              className={`w-4.5 h-4.5 ${
                 isFavorite
                   ? 'fill-[#C85A32] text-[#C85A32]'
                   : 'text-[#BCAAA0]'

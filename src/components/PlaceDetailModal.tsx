@@ -31,6 +31,18 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
   onToggleFavorite,
   onDeletePlace,
 }) => {
+  // Keyboard accessibility: Escape key closes the bottom sheet
+  React.useEffect(() => {
+    if (!place) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [place, onClose]);
+
   if (!place) return null;
 
   const openGoogleMapsDirections = () => {
@@ -65,8 +77,20 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#2D1B10]/40 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in">
-      <div className="w-full sm:max-w-lg bg-white border border-[#EDE2D5] rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-6">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#2D1B10]/50 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="place-detail-title"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full sm:max-w-lg bg-white border border-[#EDE2D5] rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-6"
+      >
+        {/* Mobile Drag Handle Indicator (Ergonomic cue) */}
+        <div className="w-12 h-1.5 rounded-full bg-[#D5BFA8] mx-auto mt-2.5 mb-0.5 sm:hidden" aria-hidden="true" />
+
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[#EDE2D5] flex items-start justify-between gap-3 bg-[#FAF4ED]">
           <div>
@@ -78,7 +102,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                 {place.neighborhood}
               </span>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-[#2E1A0F] font-serif leading-snug">
+            <h3 id="place-detail-title" className="text-lg sm:text-xl font-bold text-[#2E1A0F] font-serif leading-snug">
               {place.name}
             </h3>
           </div>
@@ -86,8 +110,9 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={() => onToggleFavorite(place.id)}
-              className="p-2 rounded-full text-[#BCAAA0] hover:text-[#C85A32] hover:bg-[#F5ECE0] transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-xl text-[#BCAAA0] hover:text-[#C85A32] hover:bg-[#F5ECE0] transition-colors active:scale-95"
               title="Toggle Favorite"
+              aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             >
               <Heart
                 className={`w-5 h-5 ${
@@ -99,27 +124,29 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
             </button>
             <button
               onClick={sharePlace}
-              className="p-2 rounded-full text-[#7A6150] hover:text-[#2E1A0F] hover:bg-[#F5ECE0] transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-xl text-[#7A6150] hover:text-[#2E1A0F] hover:bg-[#F5ECE0] transition-colors active:scale-95"
               title="Share Place"
+              aria-label="Share place details"
             >
               <Share2 className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-full text-[#7A6150] hover:text-[#2E1A0F] hover:bg-[#F5ECE0] transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-xl text-[#7A6150] hover:text-[#2E1A0F] hover:bg-[#F5ECE0] transition-colors active:scale-95"
               title="Close"
+              aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs sm:text-sm">
+        {/* Content Body with overscroll-contain */}
+        <div className="p-4 sm:p-5 overflow-y-auto overscroll-contain space-y-4 text-xs sm:text-sm">
           {/* Address */}
           <div className="flex items-start gap-2 text-[#5C4535]">
             <MapPin className="w-4 h-4 text-[#C85A32] flex-shrink-0 mt-0.5" />
-            <span>{place.address}</span>
+            <span className="leading-snug">{place.address}</span>
           </div>
 
           {/* Distance & Transit from Eendrachtstraat 13H */}
@@ -187,7 +214,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
           )}
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer Actions with 44px min-height */}
         <div className="p-4 border-t border-[#EDE2D5] bg-[#FAF4ED] flex items-center justify-between gap-2">
           {place.isUserAdded && onDeletePlace ? (
             <button
@@ -197,7 +224,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   onClose();
                 }
               }}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl text-[#991B1B] hover:bg-[#FEE2E2] text-xs font-semibold transition-colors"
+              className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[#991B1B] hover:bg-[#FEE2E2] text-xs font-semibold transition-colors active:scale-95"
             >
               <Trash2 className="w-4 h-4" />
               <span>Delete</span>
@@ -209,13 +236,13 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-[#6B5341] hover:bg-[#EBDCCF] text-xs font-semibold transition-colors border border-[#DECEBE]"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl text-[#6B5341] hover:bg-[#EBDCCF] text-xs sm:text-sm font-semibold transition-colors border border-[#DECEBE] active:scale-95"
             >
               Close
             </button>
             <button
               onClick={openGoogleMapsDirections}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs transition-colors shadow-xs"
+              className="min-h-[44px] flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs sm:text-sm transition-colors shadow-xs active:scale-95"
             >
               <Navigation className="w-4 h-4" />
               <span>Get Directions</span>

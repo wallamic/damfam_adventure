@@ -87,8 +87,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#3D2619] font-sans flex flex-col selection:bg-amber-200 selection:text-[#3D2619]">
-      {/* Top Header */}
-      <Navbar onOpenBasecampOnMap={handleOpenBasecampOnMap} />
+      {/* Top Header with Desktop Navigation */}
+      <Navbar
+        onOpenBasecampOnMap={handleOpenBasecampOnMap}
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        onOpenAddModal={() => setIsAddModalOpen(true)}
+        placesCount={places.length}
+      />
 
       {/* Main View Area */}
       <main className="flex-1">

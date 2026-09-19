@@ -51,11 +51,11 @@ export const EssentialsView: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6 pb-44 sm:pb-36 space-y-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6 pb-44 sm:pb-36 md:pb-16 space-y-6">
       {/* Header Banner */}
       <div className="bg-gradient-to-br from-[#FAF2E8] via-[#F5ECE0] to-[#EFE2D2] border border-[#DECEBE] rounded-2xl p-4 sm:p-5 shadow-xs text-[#3D2619]">
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-[#FAF4ED] text-[#803816] border border-[#DECEBE] flex items-center gap-1">
+          <span className="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-[#FAF4ED] text-[#803816] border border-[#DECEBE] flex items-center gap-1">
             <Baby className="w-3.5 h-3.5 text-[#C85A32]" />
             Family & Infant Essentials
           </span>
@@ -88,7 +88,7 @@ export const EssentialsView: React.FC = () => {
 
           <button
             onClick={callHuisarts}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs transition-colors shadow-xs"
+            className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#C85A32] hover:bg-[#B34B24] text-white font-bold text-xs transition-colors shadow-xs active:scale-95"
           >
             <Phone className="w-3.5 h-3.5" />
             <span>Call Doctor</span>
@@ -114,7 +114,7 @@ export const EssentialsView: React.FC = () => {
           <span>Life-threatening emergency: Dial <strong className="text-[#991B1B]">112</strong></span>
           <button
             onClick={callEmergency}
-            className="text-[#991B1B] font-bold hover:underline"
+            className="min-h-[44px] px-3 flex items-center text-[#991B1B] font-bold hover:underline active:scale-95"
           >
             Dial 112
           </button>

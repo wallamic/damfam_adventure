@@ -20,7 +20,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     <nav
       role="navigation"
       aria-label="Main application navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EAE0D5] text-[#7A6150] shadow-[0_-4px_24px_rgba(80,50,30,0.08)] pb-[max(env(safe-area-inset-bottom,0px),0.5rem)]"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EAE0D5] text-[#7A6150] shadow-[0_-4px_24px_rgba(80,50,30,0.08)] pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] md:hidden"
     >
       <div className="max-w-md mx-auto sm:max-w-xl md:max-w-3xl flex items-center justify-around px-1 py-1 sm:py-1.5">
         {/* Tab 1: Itinerary */}
